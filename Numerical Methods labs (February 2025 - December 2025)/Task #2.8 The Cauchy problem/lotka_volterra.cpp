@@ -11,6 +11,36 @@ void LotkaVolterraSolver::computeDerivatives(double x, double y, double& dx, dou
     dy = (-params.predator_death + params.predator_growth * x) * y;
 }
 
+SimulationData LotkaVolterraSolver::eulerExplicit(double x0, double y0, double dt, int steps) const {
+    SimulationData result;
+    result.time.reserve(steps + 1);
+    result.prey.reserve(steps + 1);
+    result.predator.reserve(steps + 1);
+
+    double x = x0;
+    double y = y0;
+    double t = 0.0;
+
+    result.time.push_back(t);
+    result.prey.push_back(x);
+    result.predator.push_back(y);
+
+    for (int i = 0; i < steps; ++i) {
+        double dx, dy;
+        computeDerivatives(x, y, dx, dy);
+
+        x += dt * dx;
+        y += dt * dy;
+        t += dt;
+
+        result.time.push_back(t);
+        result.prey.push_back(x);
+        result.predator.push_back(y);
+    }
+
+    return result;
+}
+
 SimulationData LotkaVolterraSolver::rungeKutta4(double x0, double y0, double dt, int steps) const {
     SimulationData result;
     result.time.reserve(steps + 1);
@@ -87,18 +117,11 @@ SimulationData LotkaVolterraSolver::adamsBashforth3(double x0, double y0, double
 
 void LotkaVolterraSolver::saveToCSV(const SimulationData& data, const std::string& filename) const {
     std::ofstream file(filename);
-
-    // Заголовок
     file << "time," << params.prey_name << "," << params.predator_name << "\n";
-
-    // Данные
     file << std::fixed << std::setprecision(6);
     for (size_t i = 0; i < data.size(); ++i) {
-        file << data.time[i] << ","
-            << data.prey[i] << ","
-            << data.predator[i] << "\n";
+        file << data.time[i] << "," << data.prey[i] << "," << data.predator[i] << "\n";
     }
-
     file.close();
 }
 
